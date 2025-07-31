@@ -48,10 +48,9 @@ class Config:
     PAYOS_CHECKSUM_KEY = os.environ.get('PAYOS_CHECKSUM_KEY')
     PAYOS_RETURN_URL = os.environ.get('PAYOS_RETURN_URL') or 'http://localhost:5000/payment/return'
     PAYOS_CANCEL_URL = os.environ.get('PAYOS_CANCEL_URL') or 'http://localhost:5000/payment/cancel'
-      # File download configuration
-    DOWNLOAD_FILE_PATH = os.environ.get('DOWNLOAD_FILE_PATH') or 'downloads/app.exe'
-    DOWNLOAD_FILE_URL = os.environ.get('DOWNLOAD_FILE_URL')  # Google Drive direct download URL
-    DOWNLOAD_FILE_NAME = os.environ.get('DOWNLOAD_FILE_NAME') or 'App.exe'
+      # File download configuration - Google Drive only
+    DOWNLOAD_FILE_URL = os.environ.get('DOWNLOAD_FILE_URL')  # Google Drive direct download URL (required)
+    DOWNLOAD_FILE_NAME = os.environ.get('DOWNLOAD_FILE_NAME') or 'Mahika.exe'
     
     # Payment amount (in VND for PayOS)
     PAYMENT_AMOUNT = int(os.environ.get('PAYMENT_AMOUNT', '50000'))  # 50,000 VND

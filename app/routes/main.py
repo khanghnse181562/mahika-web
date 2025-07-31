@@ -31,50 +31,35 @@ def download():
         flash('Bạn cần thanh toán trước khi tải ứng dụng', 'warning')
         return redirect(url_for('payment.checkout'))
       # Check if using Google Drive URL
-    if current_app.config.get('DOWNLOAD_FILE_URL'):
-        try:
-            # Download file from Google Drive and serve it directly
-            response = requests.get(current_app.config['DOWNLOAD_FILE_URL'], stream=True)
-            response.raise_for_status()
-            
-            # Create a generator to stream the file
-            def generate():
-                for chunk in response.iter_content(chunk_size=8192):
-                    if chunk:
-                        yield chunk
-            
-            # Return the file as a download
-            return Response(
-                generate(),
-                headers={
-                    'Content-Disposition': f'attachment; filename="{current_app.config["DOWNLOAD_FILE_NAME"]}"',
-                    'Content-Type': 'application/octet-stream',
-                    'Content-Length': response.headers.get('Content-Length', '')
-                }
-            )
-            
-        except requests.RequestException as e:
-            current_app.logger.error(f'Google Drive download error: {str(e)}')
-            flash('Không thể tải file từ Google Drive. Vui lòng thử lại sau.', 'error')
-            return redirect(url_for('main.dashboard'))
-    
-    # Fallback to local file
-    file_path = os.path.join(current_app.root_path, current_app.config['DOWNLOAD_FILE_PATH'])
-    if not os.path.exists(file_path):
-        current_app.logger.error(f'Download file not found: {file_path}')
-        flash('File ứng dụng hiện không khả dụng. Vui lòng liên hệ hỗ trợ.', 'error')
+    if not current_app.config.get('DOWNLOAD_FILE_URL'):
+        current_app.logger.error('Google Drive URL not configured')
+        flash('Dịch vụ tải file hiện không khả dụng. Vui lòng liên hệ hỗ trợ.', 'error')
         return redirect(url_for('main.dashboard'))
-    
+        
     try:
-        return send_file(
-            file_path,
-            as_attachment=True,
-            download_name=current_app.config['DOWNLOAD_FILE_NAME'],
-            mimetype='application/octet-stream'
+        # Download file from Google Drive and serve it directly
+        response = requests.get(current_app.config['DOWNLOAD_FILE_URL'], stream=True)
+        response.raise_for_status()
+        
+        # Create a generator to stream the file
+        def generate():
+            for chunk in response.iter_content(chunk_size=8192):
+                if chunk:
+                    yield chunk
+        
+        # Return the file as a download
+        return Response(
+            generate(),
+            headers={
+                'Content-Disposition': f'attachment; filename="{current_app.config["DOWNLOAD_FILE_NAME"]}"',
+                'Content-Type': 'application/octet-stream',
+                'Content-Length': response.headers.get('Content-Length', '')
+            }
         )
-    except Exception as e:
-        current_app.logger.error(f'Download error: {str(e)}')
-        flash('Có lỗi khi tải file. Vui lòng thử lại sau.', 'error')
+        
+    except requests.RequestException as e:
+        current_app.logger.error(f'Google Drive download error: {str(e)}')
+        flash('Không thể tải file từ Google Drive. Vui lòng thử lại sau.', 'error')
         return redirect(url_for('main.dashboard'))
 
 @main_bp.route('/features')
@@ -116,49 +101,50 @@ def download_direct():
         return redirect(url_for('payment.checkout'))
     
     # Check if using Google Drive URL
-    if current_app.config.get('DOWNLOAD_FILE_URL'):
-        try:
-            # Create cache directory if not exists
-            cache_dir = os.path.join(current_app.root_path, 'static', 'cache')
-            os.makedirs(cache_dir, exist_ok=True)
-            
-            cached_file = os.path.join(cache_dir, current_app.config['DOWNLOAD_FILE_NAME'])
-            
-            # Check if file is already cached (và không quá cũ - 1 giờ)
-            if os.path.exists(cached_file):
-                file_age = time.time() - os.path.getmtime(cached_file)
-                if file_age < 3600:  # 1 hour
-                    current_app.logger.info(f'Serving cached file for user {current_user.email}')
-                    return send_file(
-                        cached_file,
-                        as_attachment=True,
-                        download_name=current_app.config['DOWNLOAD_FILE_NAME'],
-                        mimetype='application/octet-stream'
-                    )
-            
-            # Download from Google Drive to cache
-            current_app.logger.info(f'Downloading fresh file from Google Drive for user {current_user.email}')
-            response = requests.get(current_app.config['DOWNLOAD_FILE_URL'], stream=True, timeout=30)
-            response.raise_for_status()
-            
-            # Save to cache
-            with open(cached_file, 'wb') as f:
-                for chunk in response.iter_content(chunk_size=8192):
-                    if chunk:
-                        f.write(chunk)
-            
-            # Serve the cached file
-            return send_file(
-                cached_file,
-                as_attachment=True,
-                download_name=current_app.config['DOWNLOAD_FILE_NAME'],
-                mimetype='application/octet-stream'
-            )
-            
-        except Exception as e:
-            current_app.logger.error(f'Direct download error: {str(e)}')
-            flash('Không thể tải file. Vui lòng thử lại sau.', 'error')
-            return redirect(url_for('main.dashboard'))
+    if not current_app.config.get('DOWNLOAD_FILE_URL'):
+        current_app.logger.error('Google Drive URL not configured')
+        flash('Dịch vụ tải file hiện không khả dụng. Vui lòng liên hệ hỗ trợ.', 'error')
+        return redirect(url_for('main.dashboard'))
     
-    # Fallback to regular download
-    return redirect(url_for('main.download'))
+    try:
+        # Create cache directory if not exists
+        cache_dir = os.path.join(current_app.root_path, 'static', 'cache')
+        os.makedirs(cache_dir, exist_ok=True)
+        
+        cached_file = os.path.join(cache_dir, current_app.config['DOWNLOAD_FILE_NAME'])
+        
+        # Check if file is already cached (và không quá cũ - 1 giờ)
+        if os.path.exists(cached_file):
+            file_age = time.time() - os.path.getmtime(cached_file)
+            if file_age < 3600:  # 1 hour
+                current_app.logger.info(f'Serving cached file for user {current_user.email}')
+                return send_file(
+                    cached_file,
+                    as_attachment=True,
+                    download_name=current_app.config['DOWNLOAD_FILE_NAME'],
+                    mimetype='application/octet-stream'
+                )
+        
+        # Download from Google Drive to cache
+        current_app.logger.info(f'Downloading fresh file from Google Drive for user {current_user.email}')
+        response = requests.get(current_app.config['DOWNLOAD_FILE_URL'], stream=True, timeout=30)
+        response.raise_for_status()
+        
+        # Save to cache
+        with open(cached_file, 'wb') as f:
+            for chunk in response.iter_content(chunk_size=8192):
+                if chunk:
+                    f.write(chunk)
+        
+        # Serve the cached file
+        return send_file(
+            cached_file,
+            as_attachment=True,
+            download_name=current_app.config['DOWNLOAD_FILE_NAME'],
+            mimetype='application/octet-stream'
+        )
+        
+    except Exception as e:
+        current_app.logger.error(f'Google Drive download error: {str(e)}')
+        flash('Không thể tải file từ Google Drive. Vui lòng thử lại sau.', 'error')
+        return redirect(url_for('main.dashboard'))

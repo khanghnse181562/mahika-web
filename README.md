@@ -8,7 +8,7 @@
 - ✅ **Xác minh email** tự động gửi link xác thực
 - ✅ **Quên mật khẩu** với email reset
 - ✅ **Tích hợp thanh toán PayOS** cho thị trường Việt Nam
-- ✅ **Tải xuống file bảo mật** chỉ cho người dùng đã thanh toán
+- ✅ **Tải xuống file từ Google Drive** chỉ cho người dùng đã thanh toán
 - ✅ **Giao diện Bootstrap** responsive và đẹp mắt
 - ✅ **Dashboard quản lý** trạng thái người dùng
 - ✅ **Lịch sử thanh toán** chi tiết
@@ -110,10 +110,12 @@ MOMO_ENDPOINT=https://test-payment.momo.vn/v2/gateway/api/create
 # Payment
 PAYMENT_AMOUNT=50000
 
-# File Download
-DOWNLOAD_FILE_PATH=downloads/your-app.exe
+# File Download - Google Drive (Required)
+DOWNLOAD_FILE_URL=https://drive.google.com/uc?export=download&id=YOUR_GOOGLE_DRIVE_FILE_ID
 DOWNLOAD_FILE_NAME=YourApp.exe
 ```
+
+**Lưu ý quan trọng:** Bạn PHẢI cấu hình `DOWNLOAD_FILE_URL` từ Google Drive để ứng dụng hoạt động. Xem [GOOGLE_DRIVE_SETUP.md](GOOGLE_DRIVE_SETUP.md) để biết cách thiết lập.
 
 ### 4. Cấu hình Email (Gmail)
 
